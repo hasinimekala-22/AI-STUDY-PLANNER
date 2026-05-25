@@ -42,7 +42,7 @@ std::string GeminiAPI::generateResponse(
     if(curl) {
 
         std::string url =
-"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
+"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
 + apiKey;
 
         json body;
@@ -112,20 +112,18 @@ std::string GeminiAPI::generateResponse(
     }
 
     try {
+        // We MUST print the raw buffer to see what Google is complaining about
+        std::cout << "\n=== RAW GOOGLE API RESPONSE ===\n" << readBuffer << "\n===============================\n" << std::endl;
 
-    json responseJson =
-    json::parse(readBuffer);
-
-    std::string text =
-    responseJson["candidates"][0]
-                ["content"]["parts"][0]
-                ["text"];
-
-    return text;
-
-}
-catch(...) {
-
-    return "JSON Parsing Failed";
-}
+        json responseJson = json::parse(readBuffer);
+        
+        std::string text = responseJson["candidates"][0]["content"]["parts"][0]["text"];
+        
+        return text;
+    }
+    catch(const std::exception& e) { 
+        // This will print the exact C++ error if it fails
+        std::cerr << "JSON Exception: " << e.what() << std::endl;
+        return "JSON Parsing Failed";
+    }
 }
