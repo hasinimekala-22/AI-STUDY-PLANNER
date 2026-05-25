@@ -122,5 +122,5 @@ void Planner::runReActLoop(vector<Task>& currentTasks, const string& currentDate
 
     updateHeap(currentTasks);
     
-    cout << "========================================" << endl;
+    cout << "======================================" << endl;
 }
