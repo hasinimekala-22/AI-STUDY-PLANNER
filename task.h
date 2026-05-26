@@ -2,6 +2,7 @@
 #define TASK_H
 
 #include <iostream>
+#include <string>
 using namespace std;
 
 struct Task
