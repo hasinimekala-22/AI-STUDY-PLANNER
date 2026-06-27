@@ -41,9 +41,20 @@ std::string GeminiAPI::generateResponse(
 
     if(curl) {
 
-        std::string url =
-"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="
-+ apiKey;
+        // AQ. keys → x-goog-api-key header; legacy AIzaSy keys → ?key= URL param
+        std::string url;
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+
+        if (apiKey.rfind("AQ.", 0) == 0) {
+            // New auth key format — send via x-goog-api-key header
+            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+            std::string apiKeyHeader = "x-goog-api-key: " + apiKey;
+            headers = curl_slist_append(headers, apiKeyHeader.c_str());
+        } else {
+            // Legacy AIzaSy key — pass as URL query parameter
+            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+        }
 
         json body;
 
@@ -58,45 +69,13 @@ std::string GeminiAPI::generateResponse(
             }
         };
 
-        std::string jsonData =
-        body.dump();
+        std::string jsonData = body.dump();
 
-        struct curl_slist* headers = NULL;
-
-        headers = curl_slist_append(
-            headers,
-            "Content-Type: application/json"
-        );
-
-        curl_easy_setopt(
-            curl,
-            CURLOPT_URL,
-            url.c_str()
-        );
-
-        curl_easy_setopt(
-            curl,
-            CURLOPT_HTTPHEADER,
-            headers
-        );
-
-        curl_easy_setopt(
-            curl,
-            CURLOPT_POSTFIELDS,
-            jsonData.c_str()
-        );
-
-        curl_easy_setopt(
-            curl,
-            CURLOPT_WRITEFUNCTION,
-            WriteCallback
-        );
-
-        curl_easy_setopt(
-            curl,
-            CURLOPT_WRITEDATA,
-            &readBuffer
-        );
+        curl_easy_setopt(curl, CURLOPT_URL,           url.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER,    headers);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS,    jsonData.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA,     &readBuffer);
 
         res = curl_easy_perform(curl);
 
@@ -112,20 +91,18 @@ std::string GeminiAPI::generateResponse(
     }
 
     try {
+        // We MUST print the raw buffer to see what Google is complaining about
+        std::cout << "\n=== RAW GOOGLE API RESPONSE ===\n" << readBuffer << "\n===============================\n" << std::endl;
 
-    json responseJson =
-    json::parse(readBuffer);
-
-    std::string text =
-    responseJson["candidates"][0]
-                ["content"]["parts"][0]
-                ["text"];
-
-    return text;
-
-}
-catch(...) {
-
-    return "JSON Parsing Failed";
-}
+        json responseJson = json::parse(readBuffer);
+        
+        std::string text = responseJson["candidates"][0]["content"]["parts"][0]["text"];
+        
+        return text;
+    }
+    catch(const std::exception& e) { 
+        // This will print the exact C++ error if it fails
+        std::cerr << "JSON Exception: " << e.what() << std::endl;
+        return "JSON Parsing Failed";
+    }
 }

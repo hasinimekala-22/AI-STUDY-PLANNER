@@ -1,0 +1,7 @@
+# Compiled binaries
+*.exe
+*.o
+*.out
+
+# Progress save file
+progress.txt

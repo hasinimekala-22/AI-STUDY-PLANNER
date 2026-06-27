@@ -7,7 +7,7 @@ using namespace std;
 int main() {
 
     string apiKey =
-        ""; // Insert your Gemini API key here
+        "YOUR_GEMINI_API_KEY_HERE"; // Paste your Gemini API key here (do NOT commit real keys!)
 
     GeminiAPI ai(apiKey);
 
