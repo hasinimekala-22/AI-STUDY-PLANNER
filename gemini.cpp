@@ -106,6 +106,10 @@ std::string GeminiAPI::generateResponse(
             << "CURL Error: "
             << curl_easy_strerror(res)
             << std::endl;
+
+            curl_easy_cleanup(curl);
+
+            return "CURL Error: " + std::string(curl_easy_strerror(res));
         }
 
         curl_easy_cleanup(curl);
@@ -113,19 +117,52 @@ std::string GeminiAPI::generateResponse(
 
     try {
 
-    json responseJson =
-    json::parse(readBuffer);
+        json responseJson = json::parse(readBuffer);
 
-    std::string text =
-    responseJson["candidates"][0]
-                ["content"]["parts"][0]
-                ["text"];
+        // Check if API returned an error object
+        if(responseJson.contains("error")) {
 
-    return text;
+            std::string errMsg =
+                responseJson["error"]["message"].get<std::string>();
 
-}
-catch(...) {
+            std::cerr
+            << "[API ERROR] "
+            << errMsg
+            << std::endl;
 
-    return "JSON Parsing Failed";
-}
+            return "API Error: " + errMsg;
+        }
+
+        // Check if candidates field exists
+        if(!responseJson.contains("candidates")
+            || responseJson["candidates"].empty()) {
+
+            std::cerr
+            << "[ERROR] No candidates in response. "
+            << "Full response: "
+            << readBuffer
+            << std::endl;
+
+            return "No response candidates returned by API.";
+        }
+
+        std::string text =
+            responseJson["candidates"][0]
+                        ["content"]["parts"][0]
+                        ["text"];
+
+        return text;
+
+    }
+    catch(const std::exception& e) {
+
+        std::cerr
+        << "[JSON PARSE ERROR] "
+        << e.what()
+        << "\nRaw buffer was: "
+        << readBuffer
+        << std::endl;
+
+        return "JSON Parsing Failed: " + std::string(e.what());
+    }
 }
