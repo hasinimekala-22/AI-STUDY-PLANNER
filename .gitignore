@@ -1,0 +1,7 @@
+# Compiled binaries - never commit these
+*.exe
+*.o
+*.out
+
+# Exported plans
+study_plan_export.txt
