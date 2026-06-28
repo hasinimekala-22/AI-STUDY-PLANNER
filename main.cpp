@@ -57,7 +57,7 @@ int main()
     // ------------------------------------------------
 
     string apiKey =
-        "AQ.Ab8RN6JeU8sclEO028CU091DRwmh-3jPPgR7q4wHa2Fw-rfm3Q";
+        "";//apikey
 
     GeminiAPI gemini(apiKey);
 
